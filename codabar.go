@@ -2,6 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
+
+	"image/png"
+
+	"github.com/boombuler/barcode"
+	"github.com/boombuler/barcode/codabar"
 )
 
 const mod = 16
@@ -30,10 +36,16 @@ var encodingTable = map[rune]int{
 }
 
 func main() {
-	originalCode := "012345678901"
+	originalCode := "0123"
 	fmt.Println("originalCode", originalCode)
 	codeWithCheckSum := addCheckSum(originalCode)
 	fmt.Println("codeWithCheckSum", codeWithCheckSum)
+
+	myBarcode, err := createBarcode(codeWithCheckSum)
+	if err != nil {
+		panic(err)
+	}
+	saveBarcode(myBarcode)
 }
 
 func addCheckSum(originalCode string) (codeWithCheckSum string) {
@@ -54,5 +66,24 @@ func addCheckSum(originalCode string) (codeWithCheckSum string) {
 	}
 
 	codeWithCheckSum = originalCode + string(checkSum)
+	return
+}
+
+// saveBarcode only support png
+func saveBarcode(myBarcode barcode.Barcode) {
+	f, err := os.Create(myBarcode.Content() + ".png")
+	if err != nil {
+		panic(err)
+	}
+	png.Encode(f, myBarcode)
+}
+
+// createBarcode creates Codabar
+func createBarcode(myCode string) (myBarcode barcode.Barcode, err error) {
+	myBarcode, err = codabar.Encode("A" + myCode + "A")
+	if err != nil {
+		return
+	}
+	myBarcode, err = barcode.Scale(myBarcode, 250, 120)
 	return
 }
